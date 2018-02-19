@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/solarized.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-markdown>
+					<script type="text/template">
+						#### Goならわかるシステムプログラミング
+						最終回
+						## Go言語とコンテナ
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						## Virtualization
+
+						Guest OS and Host OS
+
+						### Software for virtualization
+
+						* VirtualBox
+						* VMWare
+						* KVM
+						* etc...
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						### Virtulization supports Cloud Computing
+
+						IaaS
+
+						* Amazon EC2
+						* Google Compute Engine
+						* さくらのVPS
+						* RIaaS
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						### [Popek and Goldberg virtualization requirements](https://dl.acm.org/citation.cfm?doid=361011.361073)
+						
+						#### properties
+
+						* Equivalence / Fidelity
+						* Resource control / Safety
+						* Efficiency / Performance
+
+						Provided [Virtualization theorems](https://en.wikipedia.org/wiki/Popek_and_Goldberg_virtualization_requirements#Virtualization_theorems)
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						### [x86 virtualization](https://en.wikipedia.org/wiki/X86_virtualization)
+
+						x86 architecture does not support virtualization.
+						
+						At the first time, Software approach was proceding.
+						
+						#### Hardware approach 
+
+						Intel and AMD developed architecture for virtualization
+
+						* VT-x
+						* AMD-V
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						### CPU Virtualization Technologies
+
+						* User mode
+						* Supervisor mode
+						* **Hypervisor mode** 
+
+						CPU regards Hypervisor mode as storonger authorization than Supervisor mode.
+						
+						[image](http://ascii.jp/elem/000/001/502/1502954/container-2_640x253.jpg)
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						### [Paravirtualization](https://en.wikipedia.org/wiki/Paravirtualization)
+
+						Objective is to get higher performance than Full virtualization (which has Host OS).
+
+						Paravirtualization modifies Guest OS so closed OS doesn't support it. (ie. Windows)
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						# Container
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						Containers use host operating system as their base, and not hypervisor.
+
+						[image](https://d2f9gqwlnfnjcb.cloudfront.net/blog/wp-content/uploads/2015/09/12.jpg)
+
+						Technically, the Linux kernel itself has no clue that there are containers living upstairs, but containers can nevertheless share kernel resources through
+
+						* **Namespaces** => Isolate system resources
+						* **cgroups**    => limits resource usage (CPU, memory, etc.) 
+						* **chroot**     => Change root dir not to name outside dir
+
+						These allow containers to isolate processes, fully manage resources, and ensure appropriate security.
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						# Docker
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						Docker rewrites XLC (Linux Containers) and provides the following additional functions
+
+						* Portable deployment to any machine
+						* Building automation
+						* Versioning
+						* Reusable components
+						* Sharing system
+						* Ecosystem for deployment
+
+						Current Docker depends on [runc/libcontainer](https://github.com/opencontainers/runc/tree/master/libcontainer).
+
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						### Let's implement container!
+					</script>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
