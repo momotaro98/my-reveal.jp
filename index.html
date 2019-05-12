@@ -26,131 +26,284 @@
 			<div class="slides">
 				<section data-markdown>
 					<script type="text/template">
-						#### Goならわかるシステムプログラミング
-						最終回
-						## Go言語とコンテナ
-					</script>
-				</section>
-				<section data-markdown>
-					<script type="text/template">
-						## Virtualization
-
-						Guest OS and Host OS
-
-						### Software for virtualization
-
-						* VirtualBox
-						* VMWare
-						* KVM
-						* etc...
-					</script>
-				</section>
-				<section data-markdown>
-					<script type="text/template">
-						### Virtulization supports Cloud Computing
-
-						IaaS
-
-						* Amazon EC2
-						* Google Compute Engine
-						* さくらのVPS
-						* RIaaS
-					</script>
-				</section>
-				<section data-markdown>
-					<script type="text/template">
-						### [Popek and Goldberg virtualization requirements](https://dl.acm.org/citation.cfm?doid=361011.361073)
+						## Chapter 12 - A Fistful of Monads
 						
-						#### properties
+						## モナドがいっぱい
 
-						* Equivalence / Fidelity
-						* Resource control / Safety
-						* Efficiency / Performance
-
-						Provided [Virtualization theorems](https://en.wikipedia.org/wiki/Popek_and_Goldberg_virtualization_requirements#Virtualization_theorems)
+						発表者: 池田 伸太郎 2019年5月14日
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						### [x86 virtualization](https://en.wikipedia.org/wiki/X86_virtualization)
+						Functor → Applicative Functor → Monad
 
-						x86 architecture does not support virtualization.
+						![agumon](http://digimon-adventure.net/tri/images/evolution/agumon_01.png) → ![greimon](http://digimon-adventure.net/tri/images/evolution/agumon_02.png) → ![mgreimon](http://digimon-adventure.net/tri/images/evolution/agumon_03.png)
+											
+						モナドはアプリカティブファンクターの特徴も兼ねた強化版
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						復習
+						```haskell
+						class Functor f where
+							fmap :: (a -> b) -> f a -> f b
+						```
+						```haskell
+						class (Functor f) => Applicative f where
+							pure :: a -> f a
+							(<*>) :: f (a -> b) -> f a -> f b
+						```
+						FunctorもApplicative Functorもある文脈(箱とも言っている)を表現する型クラス。
+
+						Eq, Ord型クラスとは異なり、1つ分の型引数を取る型コンストラクタが利用対象。
 						
-						At the first time, Software approach was proceding.
+						`[]`, `Maybe`, `IO`とかはApplicative FunctorだしMonadでもある。
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						復習 - You **Maybe** remember...
+						```haskell
+						-- Maybeの定義 in Data.Maybe embedded module
+						data Maybe a = Nothing | Just a
+						```
+						```haskell
+						instance Applicative Maybe where
+							pure = Just
+							Nothing <*> _ = Nothing
+							(Just f) <*> something = fmap f something
+						```
+						```ghci
+						ghci> Just (+3) <*> Just 9
+						Just 12
+						ghci> pure (+3) <*> Just 10
+						Just 13
+						ghci> Nothing <*> Just "woot"
+						Nothing
+						```
 						
-						#### Hardware approach 
-
-						Intel and AMD developed architecture for virtualization
-
-						* VT-x
-						* AMD-V
+						ああ、確かにアプリカティブ則が成り立っているようだな、と納得することができますね。
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						### CPU Virtualization Technologies
-
-						* User mode
-						* Supervisor mode
-						* **Hypervisor mode** 
-
-						CPU regards Hypervisor mode as storonger authorization than Supervisor mode.
+						復習 - リスト `[]`
+						```haskell
+						instance Applicative [] where
+							pure x = [x]
+							fs <*> xs = [f x | f <- fs, x <- xs]
+						```
+						```ghci
+						ghci> [(*0), (+50), (^3)] <*> [1,2,3]
+						[0,0,0,51,52,53,1,8,27]
+						ghci> [(+),(*)] <*> [1,2] <*> [3,4] # アプリカティブ・スタイル
+						[4,5,5,6,3,4,6,8]
+						```
 						
-						[image](http://ascii.jp/elem/000/001/502/1502954/container-2_640x253.jpg)
+						ああ、確かに(ry
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						### [Paravirtualization](https://en.wikipedia.org/wiki/Paravirtualization)
+						### モナドくんの願い 
 
-						Objective is to get higher performance than Full virtualization (which has Host OS).
+						普通の値aを取って文脈付きの値を返す関数に、文脈付きの値m aを渡したい
 
-						Paravirtualization modifies Guest OS so closed OS doesn't support it. (ie. Windows)
+						言い換えると以下の関数が欲しい
+
+						```haskell
+						(>>=) :: (Monad m) => m a -> (a -> m b) -> m b
+						```
+
+						関数`>>=`はバインド(bind)と呼ばれる。
+
+						モナドは`>>=`をサポートするアプリカティブファンクターである。
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						# Container
+						### モナドくん
+
+						![monad-kun](http://s3.amazonaws.com/lyah/kid.png)
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						Containers use host operating system as their base, and not hypervisor.
+						```haskell
+						class Monad m where
+							return :: a -> m a
+							(>>=) :: m a -> (a -> m b) -> m b
+							(>>) :: m a -> m b -> m b
+							x >> y = x >>= \_ -> y
+							fail :: String -> m a
+							fail msg = error msg
+						```
 
-						[image](https://d2f9gqwlnfnjcb.cloudfront.net/blog/wp-content/uploads/2015/09/12.jpg)
+						Haskellの歴史的背景によりMonad定義にはApplicativeの型クラス制約がない。
 
-						Technically, the Linux kernel itself has no clue that there are containers living upstairs, but containers can nevertheless share kernel resources through
-
-						* **Namespaces** => Isolate system resources
-						* **cgroups**    => limits resource usage (CPU, memory, etc.) 
-						* **chroot**     => Change root dir not to name outside dir
-
-						These allow containers to isolate processes, fully manage resources, and ensure appropriate security.
+						```haskell
+						instance Monad Maybe where
+							return x = Just x
+							Nothing >>= f = Nothing
+							Just x >>= f = f x
+							fail _ = Nothing
+						```
+						```ghci
+						ghci> Just 9 >>= \x -> return (x*10)
+						Just 90
+						```
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						# Docker
+						【綱渡りの問題】
+
+						養魚場で働くピエールが休暇を取り綱渡りに挑戦。バランス棒に鳥が止まりに来るんです。鳥たちはちょっと休んでまたどこかへ飛んでいく。
+
+						棒の左右に止まった鳥の差が3以内ならば、ピエールはバランスが取れるがそうでないならバランスを崩して落ちてしまう。
+
+						![image](http://s3.amazonaws.com/lyah/pierre.png)
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						Docker rewrites XLC (Linux Containers) and provides the following additional functions
+						```haskell
+						type Birds = Int
+						type Pole = (Birds, Birds)
 
-						* Portable deployment to any machine
-						* Building automation
-						* Versioning
-						* Reusable components
-						* Sharing system
-						* Ecosystem for deployment
+						landLeft :: Birds -> Pole -> Maybe Pole
+						landLeft n (left, right)
+							| abs ((n + left) - right) < 4 = Just (left + n, right)
+							| otherwise                    = Nothing
 
-						Current Docker depends on [runc/libcontainer](https://github.com/opencontainers/runc/tree/master/libcontainer).
-
+						landRight :: Birds -> Pole -> Maybe Pole
+						landRight n (left, right)
+							| abs (left - (right + n)) < 4 = Just (left, right + n) 
+							| otherwise                    = Nothing
+						```
+						```ghci
+						ghci> landLeft 2 (0, 0)
+						Just (2,0)
+						ghci> landRight 10 (3, 0)
+						Nothing
+						```
+						でも`landLeft/Right 1`はPole型しかとれない!
+						
+						`landLeft 1 (landRight 1 (0,0))`と合成して書きたいときはどうすれば良い？
 					</script>
 				</section>
 				<section data-markdown>
 					<script type="text/template">
-						### Let's implement container!
+						`>>=`は`Maybe`を文脈付きのまま扱うことができる。
+						```ghci
+						ghci> return (0,0) >>= landRight 1 >>= landLeft 2 >>= landRight 3
+						Just (2,4)
+						ghci> return (0,0) >>= landRight 2 >>= landRight 2 >>= landLeft 3
+						Nothing
+						```
+
+						このように文脈の値どうしを相互作用させることはアプリカティブファンクターにはできないことでありモナドならば実現できる。
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						もし`Maybe`をモナドとして扱っていなかったら...
+						```haskell
+						routine: Maybe Pole
+						routine = case landLeft 1 (0, 0) of
+							Nothing -> Nothing
+							Just pole1 -> case landRight 4 pole1 of
+								Nothing -> Nothing
+								Just pole2 -> case landLeft 2 pole2 of
+									Nothing -> Nothing
+									Just pole3 -> case landLeft 1 pole1 of pole3
+						```
+
+						このような巨大で汚いコードを`>>=`でモナド適用の連鎖で書き直すのは、Maybeモナド布教コードの定番。
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						do記法
+
+						```haskell
+						routine :: Maybe Pole
+						routine = do
+							start <- return (0, 0)
+							first <- landLeft 2 start
+							second <- landRight 2 first
+							landLeft 1 second
+						```
+						```ghci
+						ghci> routine
+						Just (3,2)
+						```
+
+						いつ`>>=`を使い、いつdo記法を使うか、選択はあなた次第です。 
+						
+						![seki](https://image.entertainment-topics.jp/item/image/normal/3092938.jpg?time=1471243873)
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						リスト([])はモナド。リストをモナドとしての側面を使うことで、非決定性を伴うコードをきれいに読みやすくすることができる。
+
+						```ghci
+						# Applicative Functorもリストを非決定性の性質をもつものとして扱う。
+						ghci> (*) <$> [0,1,2] <*> [10,100,1000]
+						[0,0,0,10,100,1000,20,200,2000]
+						```
+
+						```haskell
+						# リストモナドの定義
+						instance Monad [] where
+							return x = [x]
+							xs >>= f = concat (map f xs)
+							fail _ = []
+						```
+						```ghci
+						ghci> [3,-4,5] >>= \x -> [x,-x]
+						[3,-3,-4,4,5,-5]
+						```
+						リストからすべてのパターンを尽くして非決定的値を最終的に返す。
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						```ghci
+						ghci> [1,2] >>= \n -> ['a','b'] >>= \ch -> return (n, ch)
+						[(1,'a'),(1,'b'),(2,'a'),(2,'b')]
+						```
+						```haskell
+						# do記法で書く
+						listOfTuples :: [(Int, Char)]
+						listOfTuples = do
+							n <- [1,2]
+							ch <- ['a','b']
+							return (n, ch)
+						```
+						```ghci
+						ghci> [(n,ch) | n <- [1,2], ch <- ['a', 'b']]
+						[(1,'a'),(1,'b'),(2,'a'),(2,'b')]
+						```
+
+						実は、リスト内包表記はリストモナドの糖衣構文であった！リスト内包表記もdo記法も、内部では`>>=`を使った非決定性計算に変換される。
+					</script>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+						### モナド則
+
+						【左恒等性と右恒等性】
+
+						=> いずれも`return`が通常値をモナド値に最小限な単位で返すことを保証する法則
+
+						【結合法則】
+
+						=> モナド値をモナド関数らに食わせるとき、入れ子の順序は関係なく関数自体の意味のみが結果に反映されるよ
+
+						詳しくは[WEB](https://wiki.haskell.org/Monad_laws)で！
 					</script>
 				</section>
 			</div>
